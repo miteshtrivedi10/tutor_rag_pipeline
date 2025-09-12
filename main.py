@@ -3,7 +3,6 @@ import logging
 import sys
 import base64
 from pathlib import Path
-from typing import Dict, Any, Optional, List
 from src.config.settings import settings
 from src.rag.processor import RAGProcessor
 from src.rag.openrouter import OpenRouterClient
