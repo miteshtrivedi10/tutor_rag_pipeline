@@ -1,0 +1,111 @@
+from typing import List, Dict, Any, Optional, Tuple, Awaitable
+import logging
+import os
+import asyncio
+import numpy as np
+from pathlib import Path
+from functools import lru_cache
+import hashlib
+from dataclasses import dataclass
+from typing import Set, Dict as TypeDict
+
+from src.rag.document_parser import DocumentParser
+from src.config.settings import settings
+from src.utils.file_handler import FileHandler
+from src.utils.exceptions import FileProcessingError
+from src.processors.image_processor import ImageModalProcessor
+from src.processors.table_processor import TableModalProcessor
+from src.processors.equation_processor import EquationModalProcessor
+from src.processors.generic_processor import GenericModalProcessor
+from src.rag.openrouter import OpenRouterClient
+from src.rag.nomic_embedding import NomicEmbeddingGenerator
+from src.rag.storage import MilvusStorage
+from src.rag.performance_monitor import PerformanceTimer, get_global_monitor
+from src.rag.questionnaire_generator import QuestionnaireGenerator
+
+logger = logging.getLogger(__name__)
+
+@dataclass
+class SemanticRelation:
+    """Data class for semantic relationships between content elements."""
+    source_id: str
+    target_id: str
+    relation_type: str  # "describes", "illustrates", "supports", "contains", etc.
+    strength: float  # 0.0-1.0 confidence
+    direction: str  # "text_to_visual", "visual_to_text", "bidirectional"
+    rationale: str  # Brief explanation
+    page_id: str  # Shared page identifier
+    spatial_proximity: float  # Normalized distance metric
+
+class RAGProcessor:
+    """Production-ready RAG processor with async multimodal analysis and semantic grouping."""
+
+    # Define supported relationship types between content elements
+    RELATION_TYPES = {
+        "describes": "Text element describes visual content",
+        "illustrates": "Visual element illustrates textual concept", 
+        "supports": "Element provides supporting evidence or example",
+        "contains": "Container element includes subordinate elements",
+        "references": "Element references or cites another",
+        "explains": "Element provides explanation for another",
+        "demonstrates": "Element shows practical application of concept"
+    }
+
+    def __init__(self, storage: Optional[MilvusStorage] = None, 
+                 vision_model_func=None, llm_model_func=None,
+                 cache_size: int = 512, enable_async: bool = True, 
+                 max_group_size: int = 5, relation_threshold: float = 0.6):
+        """
+        Initialize the enhanced RAG processor with OpenRouter Sonoma and Nomic Ollama integration.
+
+        Args:
+            storage: Milvus storage instance
+            vision_model_func: Function for vision model analysis (optional)
+            llm_model_func: Function for LLM content analysis (optional)
+            cache_size: LRU cache size for processed content and relationships
+            enable_async: Enable async processing for performance
+            max_group_size: Maximum elements per semantic group
+            relation_threshold: Minimum confidence for detected relationships
+        """
+        # Core components
+        self.parser = DocumentParser()
+        self.working_dir = settings.WORKING_DIR
+        self.enable_async = enable_async
+        self.max_group_size = max_group_size
+        self.relation_threshold = relation_threshold
+
+        # Model functions for processors
+        self.vision_model_func = vision_model_func
+        self.llm_model_func = llm_model_func
+
+        # Initialize components
+        self.storage = storage or MilvusStorage(
+            uri=settings.MILVUS_URI, 
+            token=settings.MILVUS_TOKEN
+        )
+        self.file_handler = FileHandler()
+        self.performance_monitor = get_global_monitor()
+        
+        # Initialize content processors for different modalities
+        self.processors = {
+            "image": ImageModalProcessor(vision_model_func=self.vision_model_func),
+            "table": TableModalProcessor(model_func=self.llm_model_func),
+            "equation": EquationModalProcessor(model_func=self.llm_model_func),
+            "generic": GenericModalProcessor(model_func=self.llm_model_func),
+        }
+        
+        # Cache for processed content and relationships to improve performance
+        self.content_cache = lru_cache(maxsize=cache_size)(self._get_cached_content)
+        self.relation_cache = lru_cache(maxsize=cache_size)(self._get_cached_relations)
+        
+        # Performance tracking
+        self.enable_profiling = getattr(settings, 'ENABLE_PROFILING', False)
+        self.processor_stats = {}
+        
+        # Initialize questionnaire generator for educational content
+        self.openrouter_client = OpenRouterClient()  # For questionnaire generation
+        self.questionnaire_generator = QuestionnaireGenerator(
+            openrouter_client=self.openrouter_client
+        )
+        
+        logger.info("RAGProcessor initialized with multimodal analysis enabled")
