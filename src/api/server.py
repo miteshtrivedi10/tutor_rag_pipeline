@@ -53,9 +53,7 @@ def vision_model_func(content_item, context=None):
     # Build context from surrounding content
     context_text = ""
     if context:
-        context_texts = [
-            item.get("text", "") for item in context if item.get("text")
-        ]
+        context_texts = [item.get("text", "") for item in context if item.get("text")]
         context_text = " ".join(context_texts[:3])[:1000]  # Limit context
 
     # Prompt for educational image analysis
@@ -93,9 +91,7 @@ def vision_model_func(content_item, context=None):
                 {"type": "text", "text": prompt},
                 {
                     "type": "image_url",
-                    "image_url": {
-                        "url": f"data:{image_mime};base64,{image_base64}"
-                    },
+                    "image_url": {"url": f"data:{image_mime};base64,{image_base64}"},
                 },
             ],
         },
@@ -133,11 +129,9 @@ def llm_model_func(content_item, context=None):
     """Real LLM model function using Sonoma-Dusk-Alpha via OpenRouter."""
     # Initialize OpenRouter client
     openrouter_client = OpenRouterClient()
-    
+
     content_type = content_item.get("type", "text")
-    text_content = content_item.get("text", "") or content_item.get(
-        "enhanced_text", ""
-    )
+    text_content = content_item.get("text", "") or content_item.get("enhanced_text", "")
 
     # Build context
     context_text = ""
@@ -147,9 +141,7 @@ def llm_model_func(content_item, context=None):
             for item in context
             if item.get("text") or item.get("enhanced_text")
         ]
-        context_text = " ".join(context_items[:2])[
-            :1500
-        ]  # Limit context length
+        context_text = " ".join(context_items[:2])[:1500]  # Limit context length
 
     # Prompt for content analysis based on type
     if content_type == "table":
@@ -242,7 +234,7 @@ def initialize_components():
         # Initialize storage
         storage = MilvusStorage(
             uri=os.getenv("MILVUS_URI", "http://localhost:19530"),
-            token=os.getenv("MILVUS_TOKEN", "Invalid Token")
+            token=os.getenv("MILVUS_TOKEN", "Invalid Token"),
         )
 
         # Initialize RAG processor with the model functions
@@ -257,7 +249,7 @@ def initialize_components():
             embedding_generator=NomicEmbeddingGenerator(),
             storage=MilvusStorage(
                 uri=os.getenv("MILVUS_URI", "http://localhost:19530"),
-                token=os.getenv("MILVUS_TOKEN", "Invalid Token")
+                token=os.getenv("MILVUS_TOKEN", "Invalid Token"),
             ),
             llm_model_func=llm_model_func,
         )
@@ -302,14 +294,16 @@ async def process_document(file_path: str):
 
     try:
         content_list = rag_processor.process_file(file_path)
-        
+
         # Generate questionnaires for the processed content
         questionnaire_data = []
-        if hasattr(rag_processor, 'questionnaire_generator') and content_list:
+        if hasattr(rag_processor, "questionnaire_generator") and content_list:
             for content_item in content_list:
-                qa_pairs = rag_processor.questionnaire_generator.generate_questionnaire_for_content(content_item)
+                qa_pairs = rag_processor.questionnaire_generator.generate_questionnaire_for_content(
+                    content_item
+                )
                 questionnaire_data.extend(qa_pairs)
-        
+
         return {
             "file_path": file_path,
             "content_items_processed": len(content_list),
@@ -342,22 +336,24 @@ async def process_documents(file_paths: List[str]):
         results = {}
         total_content_items = 0
         questionnaire_data = []
-        
+
         for file_path in file_paths:
             try:
                 content_list = rag_processor.process_file(file_path)
                 results[file_path] = content_list
                 total_content_items += len(content_list)
-                
+
                 # Generate questionnaires for the processed content
-                if hasattr(rag_processor, 'questionnaire_generator') and content_list:
+                if hasattr(rag_processor, "questionnaire_generator") and content_list:
                     for content_item in content_list:
-                        qa_pairs = rag_processor.questionnaire_generator.generate_questionnaire_for_content(content_item)
+                        qa_pairs = rag_processor.questionnaire_generator.generate_questionnaire_for_content(
+                            content_item
+                        )
                         questionnaire_data.extend(qa_pairs)
             except Exception as e:
                 logger.error(f"Error processing document {file_path}: {e}")
                 results[file_path] = []
-        
+
         return {
             "total_files_processed": len(file_paths),
             "total_content_items_extracted": total_content_items,
@@ -391,15 +387,17 @@ async def process_directory(directory_path: str):
         results = rag_processor.process_directory(directory_path)
         total_files = len(results)
         total_content_items = sum(len(content) for content in results.values())
-        
+
         # Generate questionnaires for all processed content
         questionnaire_data = []
-        if hasattr(rag_processor, 'questionnaire_generator'):
+        if hasattr(rag_processor, "questionnaire_generator"):
             for file_path, content_list in results.items():
                 for content_item in content_list:
-                    qa_pairs = rag_processor.questionnaire_generator.generate_questionnaire_for_content(content_item)
+                    qa_pairs = rag_processor.questionnaire_generator.generate_questionnaire_for_content(
+                        content_item
+                    )
                     questionnaire_data.extend(qa_pairs)
-        
+
         return {
             "directory_path": directory_path,
             "total_files_processed": total_files,
@@ -837,7 +835,9 @@ async def clear_performance_metrics():
 
 
 @app.get("/questionnaires/generate")
-async def generate_questionnaires_for_content(query: str, top_k: int = Query(5, ge=1, le=20)):
+async def generate_questionnaires_for_content(
+    query: str, top_k: int = Query(5, ge=1, le=20)
+):
     """
     Generate questionnaires for content similar to the given query.
 
@@ -848,19 +848,23 @@ async def generate_questionnaires_for_content(query: str, top_k: int = Query(5, 
     Returns:
         Generated questionnaires
     """
-    if not rag_processor or not hasattr(rag_processor, 'questionnaire_generator'):
-        raise HTTPException(status_code=500, detail="Questionnaire generator not initialized")
+    if not rag_processor or not hasattr(rag_processor, "questionnaire_generator"):
+        raise HTTPException(
+            status_code=500, detail="Questionnaire generator not initialized"
+        )
 
     try:
         # Search for similar content
         similar_content = rag_processor.search_similar_content(query, top_k=top_k)
-        
+
         # Generate questionnaires for each content item
         questionnaire_data = []
         for content_item in similar_content:
-            qa_pairs = rag_processor.questionnaire_generator.generate_questionnaire_for_content(content_item)
+            qa_pairs = rag_processor.questionnaire_generator.generate_questionnaire_for_content(
+                content_item
+            )
             questionnaire_data.extend(qa_pairs)
-        
+
         return {
             "query": query,
             "questionnaires": questionnaire_data,
@@ -875,4 +879,4 @@ async def generate_questionnaires_for_content(query: str, top_k: int = Query(5, 
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8001)
