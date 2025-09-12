@@ -3,7 +3,7 @@ import logging
 from src.rag.question_generator import QAQuestionGenerator, QuizQuestionGenerator
 from src.rag.description_generator import ContentDescriptionGenerator
 from src.rag.storage import MilvusStorage
-from src.rag.openrouter import OpenRouterEmbeddingGenerator
+from src.rag.nomic_embedding import NomicEmbeddingGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 class QAManager:
     """Manager for handling Q&A generation and content description."""
     
-    def __init__(self, embedding_generator: OpenRouterEmbeddingGenerator, storage: MilvusStorage,
+    def __init__(self, embedding_generator: NomicEmbeddingGenerator, storage: MilvusStorage,
                  llm_model_func=None):
         """
         Initialize the Q&A manager.

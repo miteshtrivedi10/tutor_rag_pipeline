@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 import logging
 from src.rag.storage import MilvusStorage
-from src.rag.openrouter import OpenRouterEmbeddingGenerator
+from src.rag.nomic_embedding import NomicEmbeddingGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class BaseDescriptionGenerator(ABC):
     """Abstract base class for description generators."""
     
-    def __init__(self, embedding_generator: OpenRouterEmbeddingGenerator, storage: MilvusStorage):
+    def __init__(self, embedding_generator: NomicEmbeddingGenerator, storage: MilvusStorage):
         """
         Initialize the description generator.
         
@@ -38,7 +38,7 @@ class BaseDescriptionGenerator(ABC):
 class ContentDescriptionGenerator(BaseDescriptionGenerator):
     """Description generator for creating meaningful textual descriptions of content."""
     
-    def __init__(self, embedding_generator: OpenRouterEmbeddingGenerator, storage: MilvusStorage, 
+    def __init__(self, embedding_generator: NomicEmbeddingGenerator, storage: MilvusStorage, 
                  llm_model_func=None):
         """
         Initialize the content description generator.

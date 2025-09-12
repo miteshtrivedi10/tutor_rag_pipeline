@@ -6,7 +6,7 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 
 # Mock the FastAPI app to avoid startup issues
 with patch('src.api.main.FastAPI'):
-    from src.api.main import initialize_components, rag_processor, qa_manager
+    from api.server import initialize_components, rag_processor, qa_manager
 
 
 class TestAPI(unittest.TestCase):
@@ -40,7 +40,7 @@ class TestAPI(unittest.TestCase):
     @patch('src.api.main.rag_processor')
     def test_process_document_endpoint(self, mock_rag):
         """Test process document endpoint."""
-        from src.api.main import app
+        from api.server import app
         from fastapi.testclient import TestClient
         
         # Mock the RAG processor response
@@ -64,7 +64,7 @@ class TestAPI(unittest.TestCase):
     @patch('src.api.main.rag_processor')
     def test_search_similar_content_endpoint(self, mock_rag):
         """Test search similar content endpoint."""
-        from src.api.main import app
+        from api.server import app
         from fastapi.testclient import TestClient
         
         # Mock the RAG processor response
@@ -88,7 +88,7 @@ class TestAPI(unittest.TestCase):
     @patch('src.api.main.qa_manager')
     def test_generate_qa_pairs_endpoint(self, mock_qa):
         """Test generate Q&A pairs endpoint."""
-        from src.api.main import app
+        from api.server import app
         from fastapi.testclient import TestClient
         
         # Mock the QA manager response
@@ -116,7 +116,7 @@ class TestAPI(unittest.TestCase):
     @patch('src.api.main.qa_manager')
     def test_generate_quiz_questions_endpoint(self, mock_qa):
         """Test generate quiz questions endpoint."""
-        from src.api.main import app
+        from api.server import app
         from fastapi.testclient import TestClient
         
         # Mock the QA manager response
@@ -147,7 +147,7 @@ class TestAPI(unittest.TestCase):
     @patch('src.api.main.qa_manager')
     def test_generate_content_description_endpoint(self, mock_qa):
         """Test generate content description endpoint."""
-        from src.api.main import app
+        from api.server import app
         from fastapi.testclient import TestClient
         
         # Mock the QA manager response
@@ -173,7 +173,7 @@ class TestAPI(unittest.TestCase):
     @patch('src.api.main.performance_monitor')
     def test_performance_metrics_endpoint(self, mock_monitor):
         """Test performance metrics endpoint."""
-        from src.api.main import app
+        from api.server import app
         from fastapi.testclient import TestClient
         
         # Mock the performance monitor response
@@ -202,7 +202,7 @@ class TestAPI(unittest.TestCase):
     
     def test_health_check_endpoint(self):
         """Test health check endpoint."""
-        from src.api.main import app
+        from api.server import app
         from fastapi.testclient import TestClient
         
         # Create test client

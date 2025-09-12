@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class QuestionnaireGenerator:
     """
     Generates descriptive questions and answers for processed pages or images using LLM.
-    
+
     This generator creates educational question-answer pairs from processed content
     without referencing the source material explicitly. It's designed for:
     - Creating assessment questions for student learning
@@ -25,7 +25,7 @@ class QuestionnaireGenerator:
     ):
         """
         Initialize the QuestionnaireGenerator.
-        
+
         Args:
             openrouter_client: OpenRouter client for LLM calls
             llm_model: LLM model to use for generation (will be replaced with actual model later)
@@ -105,11 +105,12 @@ class QuestionnaireGenerator:
             Requirements:
             1. Generate exactly 2 question-answer pairs
             2. Questions should be specific and direct educational questions
-            3. DO NOT use phrases like "according to the content", "based on the diagram", "as per the text", etc.
-            4. DO NOT reference the source material in any way
-            5. Questions should test actual knowledge of the subject matter
-            6. Answers should be concise but comprehensive
-            7. Format each pair as a JSON object with "question" and "answer" fields
+            3. DO NOT add any outside context to either question or answer that is not part of the {text_content}
+            4. DO NOT use phrases like "according to the content", "based on the diagram", "as per the text", etc.
+            5. DO NOT reference the source material in any way
+            6. Questions should test actual knowledge of the subject matter
+            7. Answers should be concise but comprehensive
+            8. Format each pair as a JSON object with "question" and "answer" fields
 
             Example of GOOD questions:
             - "What process describes the movement of nutrients through blood vessels?"
@@ -184,15 +185,15 @@ class QuestionnaireGenerator:
     ) -> List[Dict[str, Any]]:
         """
         Extract JSON array from LLM response.
-        
+
         This method handles various response formats from LLMs:
         1. Direct JSON responses
         2. JSON wrapped in markdown code blocks
         3. Fallback to empty list for unparseable responses
-        
+
         Args:
             response_content: Raw response from LLM
-            
+
         Returns:
             List of question-answer pairs or empty list if parsing fails
         """

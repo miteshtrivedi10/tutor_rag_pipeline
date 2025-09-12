@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Optional
 import logging
 from src.rag.storage import MilvusStorage
-from src.rag.openrouter import OpenRouterEmbeddingGenerator
+from src.rag.nomic_embedding import NomicEmbeddingGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 class BaseQuestionGenerator(ABC):
     """Abstract base class for question generators."""
     
-    def __init__(self, embedding_generator: OpenRouterEmbeddingGenerator, storage: MilvusStorage):
+    def __init__(self, embedding_generator: NomicEmbeddingGenerator, storage: MilvusStorage):
         """
         Initialize the question generator.
         
@@ -53,7 +53,7 @@ class BaseQuestionGenerator(ABC):
 class QAQuestionGenerator(BaseQuestionGenerator):
     """Question generator for creating Q&A pairs for student learning."""
     
-    def __init__(self, embedding_generator: OpenRouterEmbeddingGenerator, storage: MilvusStorage, 
+    def __init__(self, embedding_generator: NomicEmbeddingGenerator, storage: MilvusStorage, 
                  llm_model_func=None):
         """
         Initialize the QA question generator.
@@ -311,7 +311,7 @@ class QAQuestionGenerator(BaseQuestionGenerator):
 class QuizQuestionGenerator(BaseQuestionGenerator):
     """Question generator for creating quiz-style questions."""
     
-    def __init__(self, embedding_generator: OpenRouterEmbeddingGenerator, storage: MilvusStorage, 
+    def __init__(self, embedding_generator: NomicEmbeddingGenerator, storage: MilvusStorage, 
                  llm_model_func=None):
         """
         Initialize the quiz question generator.
