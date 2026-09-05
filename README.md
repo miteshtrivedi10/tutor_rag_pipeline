@@ -1,4 +1,4 @@
-# tutor_rag_pipeline (RAG-Anything)
+# Tutor RAG Pipeline (RAG-Anything framework based)
 
 A multimodal Retrieval-Augmented Generation (RAG) pipeline for educational content. It ingests PDFs and images, classifies and enhances content (text / tables / equations / images) using vision and language models, embeds it, indexes it in Milvus, and generates study materials such as Q&A pairs, quizzes, descriptions, and questionnaires.
 
